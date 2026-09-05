@@ -1,2 +1,189 @@
-# solark15k-homeassistant
-Home Assistant integration for Sol-Ark 15K hybrid inverters using native Modbus TCP via a Waveshare dual-channel RS485-to-PoE gateway. Includes register maps, wiring, test tools, HA YAML, dual-inverter monitoring, InfluxDB retention, Grafana dashboards, fault tracking, and long-term energy history.
+# Sol-Ark 15K Home Assistant Modbus
+
+A local, read-only Home Assistant integration for Sol-Ark 15K hybrid inverters using native Modbus TCP through a Waveshare dual-channel RS485-to-PoE gateway.
+
+This project is intended to replace a failed or unwanted SolarAssistant monitoring path while preserving local, direct access to inverter telemetry. The initial target is a pair of parallel Sol-Ark 15K inverters, with one isolated RS485 channel per inverter.
+
+> **Project status:** active development / field validation. Monitoring first; no Modbus writes.
+
+## What this project provides
+
+- Native Home Assistant `modbus:` configuration for Sol-Ark 15K telemetry.
+- Waveshare 2-CH RS485 TO POE ETH (B) setup guidance.
+- Reuse of the RS485 side of a Sol-Ark/SolarAssistant CAN/RS485 splitter where applicable.
+- A no-dependency Python Modbus TCP probe for commissioning.
+- A working register reference derived from the public Sol-Ark Modbus RTU Protocol V1.4.
+- Single-inverter commissioning before dual-inverter deployment.
+- Dual-inverter design and aggregation guidance.
+- Home Assistant dashboard examples.
+- InfluxDB long-term retention design.
+- Grafana dashboard design for multi-year historical analysis.
+- Fault-word monitoring and future fault decoding.
+- Troubleshooting and validation procedures.
+
+## Target architecture
+
+```text
+Sol-Ark 15K #1
+Battery/CAN port
+      |
+      v
+Existing CAN/RS485 splitter
+      |
+      +---- CAN --------------------> Battery BMS
+      |
+      +---- RS485 ------------------> Waveshare CH1
+                                        |
+                                        | Modbus TCP
+                                        v
+                                  Home Assistant
+                                        |
+                                        +--> Recorder / HA statistics
+                                        +--> InfluxDB
+                                        +--> Grafana
+
+Sol-Ark 15K #2
+Battery/CAN port
+      |
+      v
+Existing CAN/RS485 splitter
+      |
+      +---- CAN --------------------> Battery BMS
+      |
+      +---- RS485 ------------------> Waveshare CH2
+```
+
+The two inverter RS485 links remain electrically independent. Each Waveshare channel is treated as a separate Modbus TCP gateway.
+
+## Protocol baseline
+
+The project currently uses the public **Sol-Ark Modbus RTU Protocol V1.4** as its primary register reference. For the 15K, the document specifies:
+
+- read operations only;
+- Modbus function code 03 for holding-register reads;
+- 9600 baud;
+- 8 data bits;
+- no parity;
+- 1 stop bit;
+- fixed slave ID `0x01` for this map;
+- signal ground connected between inverter and master;
+- 120-ohm termination at the master side;
+- CAN-based battery communications can coexist with this read protocol when the inverter is configured appropriately;
+- RS485-based battery communications cannot be used simultaneously with this protocol.
+
+The Parallel-screen **Modbus SN is not the slave ID for this map**. Each independently connected inverter is polled as slave ID 1.
+
+## Important safety and support notice
+
+This repository is an independent community project. It is **not affiliated with, endorsed by, or supported by Sol-Ark**.
+
+The Sol-Ark V1.4 document states that Sol-Ark does not provide technical support for third-party Modbus devices or the Modbus map and that the map is intended for read operations. This repository therefore begins with a strict read-only design.
+
+Do not add register writes unless the applicable Sol-Ark documentation explicitly supports them and the risks are understood.
+
+## Hardware
+
+Current recommended gateway:
+
+- **Waveshare 2-CH RS485 TO POE ETH (B)**
+- PoE-powered Ethernet connection
+- two independent RS485 channels
+- Modbus TCP ↔ Modbus RTU gateway mode
+
+For a two-inverter installation:
+
+```text
+Waveshare CH1 -> Sol-Ark #1 RS485
+Waveshare CH2 -> Sol-Ark #2 RS485
+```
+
+See [`docs/hardware.md`](docs/hardware.md), [`docs/wiring.md`](docs/wiring.md), and [`docs/waveshare-setup.md`](docs/waveshare-setup.md).
+
+## Recommended commissioning sequence
+
+Do not begin by connecting both inverters.
+
+1. Confirm the battery is using CAN communications rather than RS485 battery communications.
+2. Connect only Sol-Ark #1 to Waveshare channel 1.
+3. Configure the Waveshare channel for Modbus TCP ↔ RTU, TCP port 502, and 9600/8/N/1 serial settings.
+4. Verify TCP reachability.
+5. Run the included Python probe.
+6. Compare live values with the Sol-Ark display.
+7. Enable the Home Assistant test package.
+8. Validate signed values and temperature scaling.
+9. Run for a stability period.
+10. Repeat on Sol-Ark #2 / Waveshare channel 2.
+11. Only then build combined dual-inverter sensors.
+
+See [`docs/first-test.md`](docs/first-test.md).
+
+## Repository layout
+
+```text
+.
+├── README.md
+├── LICENSE
+├── NOTICE
+├── THIRD_PARTY_NOTICES.md
+├── docs/
+│   ├── architecture.md
+│   ├── hardware.md
+│   ├── wiring.md
+│   ├── waveshare-setup.md
+│   ├── first-test.md
+│   ├── home-assistant.md
+│   ├── dual-inverter.md
+│   ├── influxdb.md
+│   ├── grafana.md
+│   └── troubleshooting.md
+├── homeassistant/
+│   ├── packages/
+│   │   └── solark15k_test_package.yaml
+│   └── dashboards/
+│       └── solark15k_test_dashboard.yaml
+├── modbus/
+│   └── solark15k_v1_4_register_map.csv
+└── tools/
+    └── solark_modbus_probe.py
+```
+
+## Long-term data plan
+
+Home Assistant should not be asked to retain every high-frequency state change for many years in its normal Recorder database. The intended architecture is:
+
+- Home Assistant Recorder for normal HA operation and short-term history;
+- Home Assistant long-term statistics for native energy/statistical history;
+- InfluxDB for high-resolution time-series retention;
+- Grafana for advanced historical visualization and analysis.
+
+The planned retention model keeps high-resolution data for a shorter period while retaining downsampled one-minute, fifteen-minute, hourly, and daily data for years.
+
+## Current field-validation priorities
+
+Before the project is considered production-ready, validate these against live 15K data:
+
+- battery power sign convention;
+- battery current sign convention;
+- battery temperature encoding on current firmware;
+- grid/load/battery values in a parallel two-inverter system;
+- which measurements are per-inverter versus already system-wide;
+- long-term energy counter word ordering;
+- fault-word behavior during real events.
+
+## Contributing
+
+Issues and pull requests are welcome. For any proposed register change, include:
+
+- inverter model;
+- firmware version if known;
+- register address;
+- raw value;
+- interpreted value;
+- comparison source, such as the inverter display;
+- whether the inverter is standalone or parallel.
+
+Avoid submitting undocumented write-register functionality.
+
+## License
+
+Original code, configuration, and documentation in this repository are licensed under the **Apache License 2.0**. Third-party documentation, trademarks, and product names remain the property of their respective owners. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
