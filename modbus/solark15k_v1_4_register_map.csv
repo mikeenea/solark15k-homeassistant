@@ -1,0 +1,81 @@
+Register,Description,HA Data Type / Handling,Scale,Unit,Notes
+60,Day Active Power (Wh),int16,0.1,kWh,Signed; inverter Grid port energy
+63,Total Active Power low word,int32 pair,0.1,kWh,Low word; high word at 64
+64,Total Active Power high word,int32 pair,0.1,kWh,High word
+70,Day Batt Charge Power (Wh),uint16,0.1,kWh,
+71,Day Batt Discharge Power (Wh),uint16,0.1,kWh,
+72,Total Batt Charge low word,uint32 pair,0.1,kWh,High word 73; word swap in HA
+73,Total Batt Charge high word,uint32 pair,0.1,kWh,
+74,Total Batt Discharge low word,uint32 pair,0.1,kWh,High word 75; word swap in HA
+75,Total Batt Discharge high word,uint32 pair,0.1,kWh,
+76,Day Grid Buy Power (Wh),uint16,0.1,kWh,
+77,Day Grid Sell Power (Wh),uint16,0.1,kWh,
+78,Total Grid Buy low word,uint16,1,raw,Non-contiguous; high word is 80
+79,Grid frequency,uint16,0.01,Hz,
+80,Total Grid Buy high word,uint16,1,raw,Combine with 78 then x0.1 kWh
+81,Total Grid Sell low word,uint32 pair,0.1,kWh,High word 82; word swap in HA
+82,Total Grid Sell high word,uint32 pair,0.1,kWh,
+84,Day Load Power (Wh),uint16,0.1,kWh,
+85,Total Load Power low word,uint32 pair,0.1,kWh,High word 86; word swap in HA
+86,Total Load Power high word,uint32 pair,0.1,kWh,
+90,DC/DC Transformer temperature,uint16,0.1,°C,Not used in 15K
+91,IGBT Heat Sink temperature,uint16,0.1,°C,Offset: raw 1000 = 0°C; HA offset -100 after scaling
+96,Total PV Power all time low word,uint32 pair,0.1,kWh,High word 97; word swap in HA
+97,Total PV Power all time high word,uint32 pair,0.1,kWh,
+103,Fault information word 1,uint16,1,bitfield,Bits 0-15
+104,Fault information word 2,uint16,1,bitfield,Bits 16-31
+105,Fault information word 3,uint16,1,bitfield,Bits 32-47
+106,Fault information word 4,uint16,1,bitfield,Bits 48-63
+107,Corrected Batt Capacity,uint16,1,Ah,
+108,Daily PV Power (Wh),uint16,0.1,kWh,
+109,DC (PV) voltage 1,uint16,0.1,V,
+110,DC (PV) current 1,uint16,0.1,A,
+111,DC (PV) voltage 2,uint16,0.1,V,
+112,DC (PV) current 2,uint16,0.1,A,
+113,DC (PV) voltage 3,uint16,0.1,V,
+114,DC (PV) current 3,uint16,0.1,A,15K only
+150,Grid side voltage L1-N,uint16,0.1,V,
+151,Grid side voltage L2-N,uint16,0.1,V,
+152,Grid side voltage L1-L2,uint16,0.1,V,
+153,Voltage at middle side of relay L1-L2,uint16,0.1,V,
+154,Inverter output voltage L1-N,uint16,0.1,V,
+155,Inverter output voltage L2-N,uint16,0.1,V,
+156,Inverter output voltage L1-L2,uint16,0.1,V,
+157,Load voltage L1,uint16,0.1,V,
+158,Load voltage L2,uint16,0.1,V,
+160,Grid side current L1,int16,0.01,A,Signed
+161,Grid side current L2,int16,0.01,A,Signed
+162,Grid external Limiter current L1,int16,0.01,A,Signed
+163,Grid external Limiter current L2,int16,0.01,A,Signed
+164,Inverter output current L1,int16,0.01,A,Signed
+165,Inverter output current L2,int16,0.01,A,Signed
+166,Gen or AC Coupled power input,int16,1,W,Positive as load output; negative as AC input
+167,Grid side L1 power,int16,1,W,Signed
+168,Grid side L2 power,int16,1,W,Signed
+169,Total power of grid side L1-L2,int16,1,W,Signed; >0 BUY; <0 SELL
+170,Grid external Limiter1 power (CT1),int16,1,W,Signed
+171,Grid external Limiter2 power (CT2),int16,1,W,Signed
+172,Grid external Total Power,int16,1,W,Signed
+173,Inverter outputs L1 power,int16,1,W,Signed
+174,Inverter outputs L2 power,int16,1,W,Signed
+175,Inverter output Total power,int16,1,W,Signed
+176,Load side L1 power,int16,1,W,Signed
+177,Load side L2 power,int16,1,W,Signed
+178,Load side Total power,int16,1,W,Signed
+179,Load current L1,int16,0.01,A,Signed
+180,Load current L2,int16,0.01,A,Signed
+181,Gen Port Voltage L1-L2,uint16,0.1,V,
+182,Battery temperature,uint16,0.1,°C,Offset +1000 raw: 1200=20°C; HA offset -100 after scaling
+183,Battery voltage,uint16,0.01,V,4100 = 41.0 V per source note
+184,Battery capacity SOC,uint16,1,%,
+186,PV1 input power,uint16,1,W,
+187,PV2 input power,uint16,1,W,
+188,PV3 input power,uint16,1,W,15K only
+189,PV4 input power,uint16,1,W,Map lists it; not marked for 15K
+190,Battery output power,int16,1,W,Signed; charge/discharge sign not explicitly described
+191,Battery output current,int16,0.01,A,Signed; charge/discharge sign not explicitly described
+192,Load frequency,uint16,0.01,Hz,
+193,Inverter output frequency,uint16,0.01,Hz,
+194,Grid side relay status,uint16,1,enum,1 Open; 2 Closed
+195,Generator side relay status,uint16,1,enum,Low 4: 0 Open; 1 Closed; 2 No Connection; 3 Closed when Generator is on
+196,Generator relay Frequency,uint16,0.01,Hz,
