@@ -8,6 +8,20 @@ This project intentionally does **not** use InfluxDB as a general Home Assistant
 
 The design goal is to preserve enough detail for Sol-Ark troubleshooting and performance analysis without storing unrelated Home Assistant data or every 10-second value forever.
 
+## Field-verified Home Assistant OS status — 2026-09-05
+
+The current installation has been staged successfully through the historian layer:
+
+- InfluxDB OSS 2.8 is installed from `https://github.com/naked-head/homeassistant-addons`.
+- Grafana is installed from the Home Assistant Community Apps repository.
+- Grafana successfully connects to InfluxDB.
+- The `solark` bucket was deleted/recreated after an initial broad Home Assistant export so the project could start with a clean dataset.
+- Home Assistant export is now intentionally restricted to Sol-Ark project entities/formulas only.
+- `sensor.sol_ark_test_*` entities are present in Home Assistant.
+- Those entities currently report `unknown` because the Waveshare Modbus gateway has not yet been installed; therefore the clean `solark` bucket is expected to remain empty until live inverter telemetry exists.
+
+Do not add unrelated Home Assistant entities merely to test Grafana. Resume historian validation after the Waveshare is installed and live Sol-Ark values are available.
+
 ## Current Home Assistant OS installation note
 
 As of September 2026, do **not** use the older `danieloldberg/addon-influxdbv2` Home Assistant app for this project. On an amd64 Home Assistant OS host, version `v0.0.4` was observed failing during its local Docker build because the Debian Bullseye security repository returned `404 Not Found` for required packages such as `libc-dev-bin` and `linux-libc-dev`. This is an app build/dependency problem, not a Sol-Ark, Home Assistant entity, disk-space, or Modbus problem.
@@ -18,13 +32,7 @@ The currently recommended HAOS repository for this project is:
 https://github.com/naked-head/homeassistant-addons
 ```
 
-That repository provides **InfluxDB OSS 2.8.0** as a Home Assistant Supervisor app. Add it under:
-
-```text
-Settings -> Apps -> App Store -> three-dot menu -> Repositories
-```
-
-Then install the app named **InfluxDB** from that repository.
+That repository provides **InfluxDB OSS 2.8.0** as a Home Assistant Supervisor app.
 
 Grafana remains available from the Home Assistant Community Apps repository:
 
@@ -68,20 +76,20 @@ Grafana dashboards for this project must query only the project-created Sol-Ark 
 
 ## Entity namespace and InfluxDB filtering
 
-During first-test commissioning, the current test package creates Home Assistant entity names based on the `Sol-Ark Test ...` names. These normally resolve to the `sensor.sol_ark_test_*` and `binary_sensor.sol_ark_test_*` namespaces.
+During first-test commissioning, the current test package creates Home Assistant entity names based on the `Sol-Ark Test ...` names. These resolve to the `sensor.sol_ark_test_*` namespace.
 
-The production implementation will use dedicated namespaces for inverter #1, inverter #2, and system-level formulas. The intended logical namespaces are:
+The production implementation will use dedicated namespaces for inverter #1, inverter #2, and system-level formulas. Because Home Assistant slugifies `Sol-Ark` to `sol_ark`, the intended production namespaces are:
 
 ```text
-sensor.solark_1_*
-sensor.solark_2_*
-sensor.solark_system_*
-binary_sensor.solark_1_*
-binary_sensor.solark_2_*
-binary_sensor.solark_system_*
+sensor.sol_ark_1_*
+sensor.sol_ark_2_*
+sensor.sol_ark_system_*
+binary_sensor.sol_ark_1_*
+binary_sensor.sol_ark_2_*
+binary_sensor.sol_ark_system_*
 ```
 
-Until production naming is finalized, an InfluxDB include-only filter should cover only the current test namespace plus those future production namespaces:
+Until production naming is finalized, the include-only filter should cover only the current test namespace plus those future production namespaces:
 
 ```yaml
 influxdb:
@@ -89,12 +97,12 @@ influxdb:
     entity_globs:
       - sensor.sol_ark_test_*
       - binary_sensor.sol_ark_test_*
-      - sensor.solark_1_*
-      - binary_sensor.solark_1_*
-      - sensor.solark_2_*
-      - binary_sensor.solark_2_*
-      - sensor.solark_system_*
-      - binary_sensor.solark_system_*
+      - sensor.sol_ark_1_*
+      - binary_sensor.sol_ark_1_*
+      - sensor.sol_ark_2_*
+      - binary_sensor.sol_ark_2_*
+      - sensor.sol_ark_system_*
+      - binary_sensor.sol_ark_system_*
 ```
 
 Do **not** add JK, SOK, iBMS, YamBMS, or general Home Assistant globs to this project database.
@@ -105,19 +113,9 @@ If the production entity namespace changes, update both the Home Assistant Influ
 
 A pair of 15K inverters can expose dozens of telemetry values. Sampling 60-100 values every 10 seconds creates a large volume of state changes over multiple years.
 
-A time-series database is better suited for:
-
-- high-resolution history;
-- downsampling;
-- retention policies;
-- range queries spanning years;
-- min/mean/max aggregation;
-- season-over-season comparisons;
-- fault-event forensic analysis.
+A time-series database is better suited for high-resolution history, downsampling, retention, long-range queries, min/mean/max aggregation, season-over-season comparisons, and fault-event forensic analysis.
 
 ## Recommended retention tiers
-
-The exact implementation depends on the InfluxDB version, but the logical retention model should be:
 
 | Tier | Resolution | Suggested retention | Purpose |
 |---|---|---:|---|
@@ -143,8 +141,6 @@ inverter #2 total output
 generator power
 ```
 
-These few signals explain most operational events.
-
 ## Per-inverter detail
 
 Preserve per-inverter measurements rather than exporting only combined templates. Important examples:
@@ -162,15 +158,9 @@ This allows future diagnosis of inverter imbalance and failures without relying 
 
 ## Recommended measurement model
 
-There are two viable approaches:
+The initial repository favors the standard Home Assistant InfluxDB integration and retained entity IDs/tags, provided the include-only filter is enforced.
 
-### Home Assistant default entity-oriented export
-
-Use the standard Home Assistant InfluxDB integration and retain entity IDs/tags. This is easiest and preserves Home Assistant naming, provided the include-only filter is enforced.
-
-### Curated schema
-
-For advanced installations, normalize measurements conceptually as:
+A future curated schema may normalize measurements conceptually as:
 
 ```text
 measurement: solark
@@ -194,8 +184,6 @@ fields:
   heat_sink_temperature
 ```
 
-The initial repository will favor the standard HA integration, then add curated queries where useful.
-
 ## Raw diagnostic registers
 
 During early field validation, retain raw values for unusual Sol-Ark registers:
@@ -215,20 +203,9 @@ Once behavior is well established, some raw values may be excluded from long-ter
 
 ## Downsampling strategy
 
-For numeric measurements such as power and temperature, downsample using:
+For numeric measurements such as power and temperature, downsample using minimum, mean, maximum, and last. A one-minute bucket containing min/mean/max preserves spikes better than keeping only a simple average.
 
-```text
-minimum
-mean
-maximum
-last
-```
-
-A one-minute bucket containing min/mean/max preserves spikes better than keeping only a simple average.
-
-For counters such as cumulative energy, use the appropriate last/max/change logic rather than averaging the counter itself.
-
-For boolean or enum states, preserve transitions or calculate duration within each state.
+For counters such as cumulative energy, use appropriate last/max/change logic rather than averaging the counter itself. For boolean or enum states, preserve transitions or calculate duration within each state.
 
 ## Daily summary dataset
 
@@ -287,26 +264,21 @@ Store backups separately from the primary Home Assistant system disk when practi
 
 The Home Assistant YAML and Grafana dashboards belong in GitHub and can be recreated. The time-series data itself cannot be recreated after loss unless another source retained it.
 
-Therefore prioritize backups of:
-
-1. InfluxDB data;
-2. InfluxDB configuration/retention tasks;
-3. Grafana provisioning/dashboards;
-4. Home Assistant configuration.
+Prioritize backups of InfluxDB data, InfluxDB configuration/retention tasks, Grafana provisioning/dashboards, and Home Assistant configuration.
 
 ## Returning historical values to Home Assistant
 
 Selected InfluxDB query results can be exposed back to Home Assistant as project-created formula/history sensors, for example:
 
 ```text
-sensor.solark_system_pv_yesterday
-sensor.solark_system_pv_month_to_date
-sensor.solark_system_pv_last_month
-sensor.solark_system_pv_year_to_date
-sensor.solark_system_peak_load_today
-sensor.solark_system_min_soc_30_days
-sensor.solark_system_grid_import_month
-sensor.solark_system_grid_export_month
+sensor.sol_ark_system_pv_yesterday
+sensor.sol_ark_system_pv_month_to_date
+sensor.sol_ark_system_pv_last_month
+sensor.sol_ark_system_pv_year_to_date
+sensor.sol_ark_system_peak_load_today
+sensor.sol_ark_system_min_soc_30_days
+sensor.sol_ark_system_grid_import_month
+sensor.sol_ark_system_grid_export_month
 ```
 
 This provides simple historical context inside normal Home Assistant dashboards while Grafana remains the advanced analysis interface.
