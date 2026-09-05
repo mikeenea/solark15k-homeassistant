@@ -1,0 +1,13 @@
+Sol-Ark 15K Home Assistant Modbus Integration
+
+Copyright 2026 Michael Enea
+
+This project is independently developed and is not affiliated with, endorsed by,
+or supported by Sol-Ark.
+
+Sol-Ark, Home Assistant, Waveshare, Grafana, InfluxDB, SolarAssistant, and related
+product names and trademarks are the property of their respective owners.
+
+The repository's Apache License 2.0 applies only to original code, configuration,
+and documentation contributed to this project. Third-party documentation and
+trademarks are not relicensed by this repository.
