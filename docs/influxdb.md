@@ -6,6 +6,32 @@ Use InfluxDB as the high-resolution, multi-year historian for Sol-Ark telemetry 
 
 The design goal is to preserve enough detail for troubleshooting and performance analysis without storing every 10-second value forever.
 
+## Current Home Assistant OS installation note
+
+As of September 2026, do **not** use the older `danieloldberg/addon-influxdbv2` Home Assistant app for this project. On an amd64 Home Assistant OS host, version `v0.0.4` was observed failing during its local Docker build because the Debian Bullseye security repository returned `404 Not Found` for required packages such as `libc-dev-bin` and `linux-libc-dev`. This is an app build/dependency problem, not a Sol-Ark, Home Assistant entity, disk-space, or Modbus problem.
+
+The currently recommended HAOS repository for this project is:
+
+```text
+https://github.com/naked-head/homeassistant-addons
+```
+
+That repository provides **InfluxDB OSS 2.8.0** as a Home Assistant Supervisor app. Add it under:
+
+```text
+Settings -> Apps -> App Store -> three-dot menu -> Repositories
+```
+
+Then install the app named **InfluxDB** from that repository.
+
+Grafana remains available from the Home Assistant Community Apps repository:
+
+```text
+https://github.com/hassio-addons/repository
+```
+
+This recommendation should be revisited periodically because third-party Home Assistant app maintenance can change.
+
 ## Data-flow role
 
 ```text
