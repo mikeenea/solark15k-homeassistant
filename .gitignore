@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Home Assistant secrets / backups
+secrets.yaml
+*.tar
+*.tar.gz
+*.backup
+
+# Environment / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local test output
+*.log
+probe-output*.txt
+register-dump*.txt
+
+# Database / Grafana local state
+*.db
+*.sqlite
+*.sqlite3
+influxdb-data/
+grafana-data/
