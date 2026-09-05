@@ -1,0 +1,25 @@
+type: entities
+title: Sol-Ark 15K Modbus First Test
+show_header_toggle: false
+entities:
+  - entity: sensor.sol_ark_test_battery_voltage
+  - entity: sensor.sol_ark_test_battery_soc
+  - entity: sensor.sol_ark_test_battery_temperature
+  - entity: sensor.sol_ark_test_battery_power
+  - entity: sensor.sol_ark_test_battery_current
+  - entity: sensor.sol_ark_test_total_pv_power
+  - entity: sensor.sol_ark_test_pv1_power
+  - entity: sensor.sol_ark_test_pv2_power
+  - entity: sensor.sol_ark_test_pv3_power
+  - entity: sensor.sol_ark_test_grid_l1_n_voltage
+  - entity: sensor.sol_ark_test_grid_l2_n_voltage
+  - entity: sensor.sol_ark_test_grid_l1_l2_voltage
+  - entity: sensor.sol_ark_test_grid_frequency
+  - entity: sensor.sol_ark_test_grid_total_power
+  - entity: sensor.sol_ark_test_grid_import_power
+  - entity: sensor.sol_ark_test_grid_export_power
+  - entity: sensor.sol_ark_test_inverter_total_power
+  - entity: sensor.sol_ark_test_load_total_power
+  - entity: sensor.sol_ark_test_heat_sink_temperature
+  - entity: sensor.sol_ark_test_grid_relay_state
+  - entity: binary_sensor.sol_ark_test_any_fault
