@@ -1,0 +1,718 @@
+# Sol-Ark 15K - native Home Assistant Modbus first-test package
+#
+# READ ONLY. No write entities are defined.
+#
+# Before use:
+#   1. Configure Waveshare CH1 for Modbus TCP <-> RTU on TCP 502.
+#   2. Configure serial as 9600/8/N/1.
+#   3. Use non-storage gateway mode.
+#   4. Edit the host IP below.
+#
+# Protocol basis: public Sol-Ark Modbus RTU Protocol V1.4.
+# Slave ID for this map is fixed at 1.
+
+modbus:
+  - name: solark_test
+    type: tcp
+    host: 192.168.1.241
+    port: 502
+    timeout: 5
+    delay: 1
+    message_wait_milliseconds: 100
+
+    sensors:
+      # ---- Grid / energy ----
+      - name: "Sol-Ark Test Grid Frequency"
+        unique_id: solark_test_grid_frequency
+        slave: 1
+        address: 79
+        input_type: holding
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "Hz"
+        device_class: frequency
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Day Grid Import"
+        unique_id: solark_test_day_grid_import
+        slave: 1
+        address: 76
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Day Grid Export"
+        unique_id: solark_test_day_grid_export
+        slave: 1
+        address: 77
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      # Total grid import is non-contiguous: low=78, high=80.
+      - name: "Sol-Ark Test Total Grid Import Low Raw"
+        unique_id: solark_test_total_grid_import_low_raw
+        slave: 1
+        address: 78
+        input_type: holding
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total Grid Import High Raw"
+        unique_id: solark_test_total_grid_import_high_raw
+        slave: 1
+        address: 80
+        input_type: holding
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total Grid Export"
+        unique_id: solark_test_total_grid_export
+        slave: 1
+        address: 81
+        input_type: holding
+        data_type: uint32
+        swap: word
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      # ---- Battery energy ----
+      - name: "Sol-Ark Test Day Battery Charge"
+        unique_id: solark_test_day_battery_charge
+        slave: 1
+        address: 70
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Day Battery Discharge"
+        unique_id: solark_test_day_battery_discharge
+        slave: 1
+        address: 71
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total Battery Charge"
+        unique_id: solark_test_total_battery_charge
+        slave: 1
+        address: 72
+        input_type: holding
+        data_type: uint32
+        swap: word
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total Battery Discharge"
+        unique_id: solark_test_total_battery_discharge
+        slave: 1
+        address: 74
+        input_type: holding
+        data_type: uint32
+        swap: word
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      # ---- Load / PV energy ----
+      - name: "Sol-Ark Test Day Load Energy"
+        unique_id: solark_test_day_load_energy
+        slave: 1
+        address: 84
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total Load Energy"
+        unique_id: solark_test_total_load_energy
+        slave: 1
+        address: 85
+        input_type: holding
+        data_type: uint32
+        swap: word
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Daily PV Energy"
+        unique_id: solark_test_daily_pv_energy
+        slave: 1
+        address: 108
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        scan_interval: 60
+
+      - name: "Sol-Ark Test Total PV Energy"
+        unique_id: solark_test_total_pv_energy
+        slave: 1
+        address: 96
+        input_type: holding
+        data_type: uint32
+        swap: word
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      # ---- Fault words ----
+      - name: "Sol-Ark Test Fault Word 1"
+        unique_id: solark_test_fault_word_1
+        slave: 1
+        address: 103
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Fault Word 2"
+        unique_id: solark_test_fault_word_2
+        slave: 1
+        address: 104
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Fault Word 3"
+        unique_id: solark_test_fault_word_3
+        slave: 1
+        address: 105
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Fault Word 4"
+        unique_id: solark_test_fault_word_4
+        slave: 1
+        address: 106
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      # ---- PV ----
+      - name: "Sol-Ark Test PV1 Voltage"
+        unique_id: solark_test_pv1_voltage
+        slave: 1
+        address: 109
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV1 Current"
+        unique_id: solark_test_pv1_current
+        slave: 1
+        address: 110
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV2 Voltage"
+        unique_id: solark_test_pv2_voltage
+        slave: 1
+        address: 111
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV2 Current"
+        unique_id: solark_test_pv2_current
+        slave: 1
+        address: 112
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV3 Voltage"
+        unique_id: solark_test_pv3_voltage
+        slave: 1
+        address: 113
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV3 Current"
+        unique_id: solark_test_pv3_current
+        slave: 1
+        address: 114
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV1 Power"
+        unique_id: solark_test_pv1_power
+        slave: 1
+        address: 186
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV2 Power"
+        unique_id: solark_test_pv2_power
+        slave: 1
+        address: 187
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test PV3 Power"
+        unique_id: solark_test_pv3_power
+        slave: 1
+        address: 188
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      # ---- Grid / inverter / load ----
+      - name: "Sol-Ark Test Grid L1-N Voltage"
+        unique_id: solark_test_grid_l1_n_voltage
+        slave: 1
+        address: 150
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid L2-N Voltage"
+        unique_id: solark_test_grid_l2_n_voltage
+        slave: 1
+        address: 151
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid L1-L2 Voltage"
+        unique_id: solark_test_grid_l1_l2_voltage
+        slave: 1
+        address: 152
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid L1 Power"
+        unique_id: solark_test_grid_l1_power
+        slave: 1
+        address: 167
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid L2 Power"
+        unique_id: solark_test_grid_l2_power
+        slave: 1
+        address: 168
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid Total Power"
+        unique_id: solark_test_grid_total_power
+        slave: 1
+        address: 169
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test CT1 Power"
+        unique_id: solark_test_ct1_power
+        slave: 1
+        address: 170
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test CT2 Power"
+        unique_id: solark_test_ct2_power
+        slave: 1
+        address: 171
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test External CT Total Power"
+        unique_id: solark_test_external_ct_total_power
+        slave: 1
+        address: 172
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Inverter Total Power"
+        unique_id: solark_test_inverter_total_power
+        slave: 1
+        address: 175
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Load Total Power"
+        unique_id: solark_test_load_total_power
+        slave: 1
+        address: 178
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      # ---- Battery / temperatures / status ----
+      - name: "Sol-Ark Test Heat Sink Temperature"
+        unique_id: solark_test_heat_sink_temperature
+        slave: 1
+        address: 91
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        offset: -100
+        precision: 1
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        scan_interval: 30
+
+      - name: "Sol-Ark Test Battery Temperature"
+        unique_id: solark_test_battery_temperature
+        slave: 1
+        address: 182
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        offset: -100
+        precision: 1
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Battery Voltage"
+        unique_id: solark_test_battery_voltage
+        slave: 1
+        address: 183
+        input_type: holding
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Battery SOC"
+        unique_id: solark_test_battery_soc
+        slave: 1
+        address: 184
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Battery Power"
+        unique_id: solark_test_battery_power
+        slave: 1
+        address: 190
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Battery Current"
+        unique_id: solark_test_battery_current
+        slave: 1
+        address: 191
+        input_type: holding
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "A"
+        device_class: current
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Load Frequency"
+        unique_id: solark_test_load_frequency
+        slave: 1
+        address: 192
+        input_type: holding
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "Hz"
+        device_class: frequency
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Inverter Frequency"
+        unique_id: solark_test_inverter_frequency
+        slave: 1
+        address: 193
+        input_type: holding
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "Hz"
+        device_class: frequency
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Grid Relay Raw"
+        unique_id: solark_test_grid_relay_raw
+        slave: 1
+        address: 194
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Generator Relay Raw"
+        unique_id: solark_test_generator_relay_raw
+        slave: 1
+        address: 195
+        input_type: holding
+        data_type: uint16
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Generator Frequency"
+        unique_id: solark_test_generator_frequency
+        slave: 1
+        address: 196
+        input_type: holding
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "Hz"
+        device_class: frequency
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Generator or AC Coupled Power"
+        unique_id: solark_test_generator_or_ac_coupled_power
+        slave: 1
+        address: 166
+        input_type: holding
+        data_type: int16
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 10
+
+      - name: "Sol-Ark Test Generator Port Voltage"
+        unique_id: solark_test_generator_port_voltage
+        slave: 1
+        address: 181
+        input_type: holding
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "V"
+        device_class: voltage
+        state_class: measurement
+        scan_interval: 10
+
+template:
+  - sensor:
+      - name: "Sol-Ark Test Total PV Power"
+        unique_id: solark_test_total_pv_power
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        availability: >
+          {{ has_value('sensor.sol_ark_test_pv1_power')
+             and has_value('sensor.sol_ark_test_pv2_power')
+             and has_value('sensor.sol_ark_test_pv3_power') }}
+        state: >
+          {{ (states('sensor.sol_ark_test_pv1_power') | float(0)
+            + states('sensor.sol_ark_test_pv2_power') | float(0)
+            + states('sensor.sol_ark_test_pv3_power') | float(0)) | round(0) }}
+
+      - name: "Sol-Ark Test Grid Import Power"
+        unique_id: solark_test_grid_import_power
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        availability: "{{ has_value('sensor.sol_ark_test_grid_total_power') }}"
+        state: >
+          {% set p = states('sensor.sol_ark_test_grid_total_power') | float(0) %}
+          {{ [p, 0] | max | round(0) }}
+
+      - name: "Sol-Ark Test Grid Export Power"
+        unique_id: solark_test_grid_export_power
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        availability: "{{ has_value('sensor.sol_ark_test_grid_total_power') }}"
+        state: >
+          {% set p = states('sensor.sol_ark_test_grid_total_power') | float(0) %}
+          {{ [-p, 0] | max | round(0) }}
+
+      - name: "Sol-Ark Test Total Grid Import Energy"
+        unique_id: solark_test_total_grid_import_energy
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        availability: >
+          {{ has_value('sensor.sol_ark_test_total_grid_import_low_raw')
+             and has_value('sensor.sol_ark_test_total_grid_import_high_raw') }}
+        state: >
+          {% set lo = states('sensor.sol_ark_test_total_grid_import_low_raw') | int(0) %}
+          {% set hi = states('sensor.sol_ark_test_total_grid_import_high_raw') | int(0) %}
+          {{ ((hi * 65536 + lo) * 0.1) | round(1) }}
+
+      - name: "Sol-Ark Test Grid Relay State"
+        unique_id: solark_test_grid_relay_state
+        availability: "{{ has_value('sensor.sol_ark_test_grid_relay_raw') }}"
+        state: >
+          {% set x = states('sensor.sol_ark_test_grid_relay_raw') | int(-1) %}
+          {% if x == 1 %}Open
+          {% elif x == 2 %}Closed
+          {% else %}Unknown ({{ x }})
+          {% endif %}
+
+      - name: "Sol-Ark Test Generator Relay State"
+        unique_id: solark_test_generator_relay_state
+        availability: "{{ has_value('sensor.sol_ark_test_generator_relay_raw') }}"
+        state: >
+          {% set x = (states('sensor.sol_ark_test_generator_relay_raw') | int(0)) % 16 %}
+          {% if x == 0 %}Open
+          {% elif x == 1 %}Closed
+          {% elif x == 2 %}No Connection
+          {% elif x == 3 %}Closed when Generator is on
+          {% else %}Unknown ({{ x }})
+          {% endif %}
+
+  - binary_sensor:
+      - name: "Sol-Ark Test Any Fault"
+        unique_id: solark_test_any_fault
+        availability: >
+          {{ has_value('sensor.sol_ark_test_fault_word_1')
+             and has_value('sensor.sol_ark_test_fault_word_2')
+             and has_value('sensor.sol_ark_test_fault_word_3')
+             and has_value('sensor.sol_ark_test_fault_word_4') }}
+        state: >
+          {{ (states('sensor.sol_ark_test_fault_word_1') | int(0)) != 0
+             or (states('sensor.sol_ark_test_fault_word_2') | int(0)) != 0
+             or (states('sensor.sol_ark_test_fault_word_3') | int(0)) != 0
+             or (states('sensor.sol_ark_test_fault_word_4') | int(0)) != 0 }}
+        device_class: problem
