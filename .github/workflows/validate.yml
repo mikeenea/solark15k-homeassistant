@@ -1,0 +1,81 @@
+name: Validate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install YAML parser
+        run: python -m pip install --disable-pip-version-check pyyaml
+
+      - name: Compile Python tools
+        run: python -m py_compile tools/solark_modbus_probe.py
+
+      - name: Parse YAML files
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          import yaml
+
+          files = sorted(Path(".").rglob("*.yaml")) + sorted(Path(".").rglob("*.yml"))
+          failed = False
+          for path in files:
+              if ".github/workflows" in str(path):
+                  # GitHub workflow uses YAML syntax too; parse it as well.
+                  pass
+              try:
+                  with path.open("r", encoding="utf-8") as handle:
+                      yaml.safe_load(handle)
+                  print(f"OK: {path}")
+              except Exception as exc:
+                  failed = True
+                  print(f"FAILED: {path}: {exc}", file=sys.stderr)
+          if failed:
+              raise SystemExit(1)
+
+      - name: Check CSV register map
+        shell: python
+        run: |
+          import csv
+          from pathlib import Path
+
+          path = Path("modbus/solark15k_v1_4_register_map.csv")
+          with path.open("r", encoding="utf-8") as handle:
+              rows = list(csv.DictReader(handle))
+
+          if not rows:
+              raise SystemExit("register map is empty")
+
+          required = {"Register", "Description", "HA Data Type / Handling", "Scale", "Unit", "Notes"}
+          missing = required - set(rows[0])
+          if missing:
+              raise SystemExit(f"missing CSV columns: {sorted(missing)}")
+
+          addresses = []
+          for row in rows:
+              try:
+                  addresses.append(int(row["Register"]))
+              except ValueError as exc:
+                  raise SystemExit(f"invalid register address: {row['Register']}") from exc
+
+          if len(addresses) != len(set(addresses)):
+              raise SystemExit("duplicate register address detected")
+
+          print(f"Validated {len(rows)} register rows")
