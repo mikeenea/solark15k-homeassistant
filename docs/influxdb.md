@@ -2,9 +2,11 @@
 
 ## Objective
 
-Use InfluxDB as the high-resolution, multi-year historian for Sol-Ark telemetry while leaving Home Assistant Recorder in place for normal Home Assistant operation.
+Use InfluxDB as the high-resolution, multi-year historian for **only the entities created by this Sol-Ark integration and formulas derived from those entities**, while leaving Home Assistant Recorder in place for normal Home Assistant operation.
 
-The design goal is to preserve enough detail for troubleshooting and performance analysis without storing every 10-second value forever.
+This project intentionally does **not** use InfluxDB as a general Home Assistant historian. Existing JK, SOK, iBMS, YamBMS, weather, lighting, networking, automation, system, and other unrelated Home Assistant entities are outside the scope of this database unless they are later explicitly incorporated into a Sol-Ark-derived formula by design.
+
+The design goal is to preserve enough detail for Sol-Ark troubleshooting and performance analysis without storing unrelated Home Assistant data or every 10-second value forever.
 
 ## Current Home Assistant OS installation note
 
@@ -41,6 +43,63 @@ Sol-Ark -> Waveshare -> Home Assistant -> InfluxDB -> Grafana
 ```
 
 InfluxDB complements Home Assistant; it does not replace Recorder.
+
+## Strict data boundary
+
+The `solark` bucket is reserved for this project.
+
+Allowed data sources are:
+
+1. direct Sol-Ark Modbus entities created by this repository;
+2. Home Assistant template/formula entities created by this repository from those Sol-Ark entities;
+3. project-created communications, availability, fault, and diagnostic entities directly associated with the Sol-Ark integration.
+
+The following are excluded by design:
+
+- JK BMS entities;
+- SOK BMS entities;
+- iBMS entities;
+- YamBMS entities;
+- ESPHome entities unrelated to this integration;
+- lights, switches, weather, device trackers, updates, automations, system metrics, and other general Home Assistant entities;
+- any third-party sensor that is not explicitly part of a project-defined Sol-Ark formula.
+
+Grafana dashboards for this project must query only the project-created Sol-Ark entity namespace and derived project formulas.
+
+## Entity namespace and InfluxDB filtering
+
+During first-test commissioning, the current test package creates Home Assistant entity names based on the `Sol-Ark Test ...` names. These normally resolve to the `sensor.sol_ark_test_*` and `binary_sensor.sol_ark_test_*` namespaces.
+
+The production implementation will use dedicated namespaces for inverter #1, inverter #2, and system-level formulas. The intended logical namespaces are:
+
+```text
+sensor.solark_1_*
+sensor.solark_2_*
+sensor.solark_system_*
+binary_sensor.solark_1_*
+binary_sensor.solark_2_*
+binary_sensor.solark_system_*
+```
+
+Until production naming is finalized, an InfluxDB include-only filter should cover only the current test namespace plus those future production namespaces:
+
+```yaml
+influxdb:
+  include:
+    entity_globs:
+      - sensor.sol_ark_test_*
+      - binary_sensor.sol_ark_test_*
+      - sensor.solark_1_*
+      - binary_sensor.solark_1_*
+      - sensor.solark_2_*
+      - binary_sensor.solark_2_*
+      - sensor.solark_system_*
+      - binary_sensor.solark_system_*
+```
+
+Do **not** add JK, SOK, iBMS, YamBMS, or general Home Assistant globs to this project database.
+
+If the production entity namespace changes, update both the Home Assistant InfluxDB include filter and this document together.
 
 ## Why a separate historian
 
@@ -99,7 +158,7 @@ battery power/current as reported by each inverter
 load/grid registers by inverter until parallel semantics are validated
 ```
 
-This allows future diagnosis of inverter imbalance and failures.
+This allows future diagnosis of inverter imbalance and failures without relying on unrelated BMS telemetry.
 
 ## Recommended measurement model
 
@@ -107,7 +166,7 @@ There are two viable approaches:
 
 ### Home Assistant default entity-oriented export
 
-Use the standard Home Assistant InfluxDB integration and retain entity IDs/tags. This is easiest and preserves Home Assistant naming.
+Use the standard Home Assistant InfluxDB integration and retain entity IDs/tags. This is easiest and preserves Home Assistant naming, provided the include-only filter is enforced.
 
 ### Curated schema
 
@@ -119,7 +178,7 @@ measurement: solark
 tags:
   site=home
   inverter=1|2|system
-  source=modbus
+  source=modbus|formula
 
 fields:
   pv1_power
@@ -137,27 +196,9 @@ fields:
 
 The initial repository will favor the standard HA integration, then add curated queries where useful.
 
-## Home Assistant export filtering
-
-Do not export every entity in Home Assistant unless that is already your deliberate system-wide practice.
-
-Prefer an include list for Sol-Ark-related entities, for example by entity prefix or explicit sensor list.
-
-Categories to export:
-
-- power;
-- energy;
-- voltage/current;
-- SOC;
-- temperature;
-- frequency;
-- relay state;
-- fault words;
-- availability/communications status.
-
 ## Raw diagnostic registers
 
-During early field validation, retain raw values for unusual registers:
+During early field validation, retain raw values for unusual Sol-Ark registers:
 
 ```text
 battery temperature raw
@@ -255,17 +296,17 @@ Therefore prioritize backups of:
 
 ## Returning historical values to Home Assistant
 
-Selected InfluxDB query results can be exposed back to Home Assistant as sensors, for example:
+Selected InfluxDB query results can be exposed back to Home Assistant as project-created formula/history sensors, for example:
 
 ```text
-sensor.sol_ark_pv_yesterday
-sensor.sol_ark_pv_month_to_date
-sensor.sol_ark_pv_last_month
-sensor.sol_ark_pv_year_to_date
-sensor.sol_ark_peak_load_today
-sensor.sol_ark_min_soc_30_days
-sensor.sol_ark_grid_import_month
-sensor.sol_ark_grid_export_month
+sensor.solark_system_pv_yesterday
+sensor.solark_system_pv_month_to_date
+sensor.solark_system_pv_last_month
+sensor.solark_system_pv_year_to_date
+sensor.solark_system_peak_load_today
+sensor.solark_system_min_soc_30_days
+sensor.solark_system_grid_import_month
+sensor.solark_system_grid_export_month
 ```
 
 This provides simple historical context inside normal Home Assistant dashboards while Grafana remains the advanced analysis interface.
@@ -278,11 +319,11 @@ Verify Sol-Ark Modbus entities.
 
 ### Phase 2
 
-Export verified entities to InfluxDB at native update rate.
+Export only verified project-created Sol-Ark entities and formulas to InfluxDB at native update rate.
 
 ### Phase 3
 
-Build Grafana live/24-hour dashboards.
+Build Grafana live/24-hour dashboards using only those entities.
 
 ### Phase 4
 
