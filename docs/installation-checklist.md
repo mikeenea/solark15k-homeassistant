@@ -2,13 +2,34 @@
 
 Use this as a print-friendly commissioning checklist for the physical build.
 
+## Current deployment status — 2026-09-05
+
+Software staging is complete through Home Assistant. Field commissioning is paused until the Waveshare 2-CH RS485 TO POE ETH (B) gateway is available.
+
+Completed before the hold point:
+
+- [x] Home Assistant package support enabled.
+- [x] `solark15k_test_package.yaml` copied into the Home Assistant packages folder.
+- [x] Home Assistant configuration check passes.
+- [x] Home Assistant restarted successfully with the package loaded.
+- [x] `sensor.sol_ark_test_*` entities are present.
+- [x] InfluxDB OSS 2.8 installed.
+- [x] Clean `solark` bucket created.
+- [x] InfluxDB export restricted to project-created Sol-Ark entities and project formulas only.
+- [x] Grafana installed.
+- [x] Grafana InfluxDB data source connection tested successfully.
+- [ ] Waveshare hardware procured/installed.
+- [ ] Live Modbus values received.
+
+Until the Waveshare is installed, Sol-Ark test entities may remain `unknown`; this is expected and is not a reason to troubleshoot the register map or Grafana.
+
 ## A. Pre-installation
 
-- [ ] Confirm repository test package is current.
-- [ ] Confirm Sol-Ark model is 15K.
+- [x] Confirm repository test package is current.
+- [x] Confirm Sol-Ark model is 15K.
 - [ ] Record inverter #1 serial number.
 - [ ] Record inverter #2 serial number.
-- [ ] Record inverter firmware versions.
+- [x] Record inverter firmware versions.
 - [ ] Record parallel master/slave roles.
 - [ ] Record Parallel-screen Modbus SN values for reference only.
 - [ ] Confirm battery communication protocol is CAN.
@@ -117,11 +138,12 @@ python tools/solark_modbus_probe.py <CH1-IP> --dump
 
 ## I. Home Assistant CH1
 
-- [ ] Test package copied to HA.
-- [ ] Host IP edited.
-- [ ] HA configuration check passes.
-- [ ] HA restarted.
-- [ ] Core sensors populate.
+- [x] Test package copied to HA.
+- [ ] Host IP edited to the actual Waveshare address.
+- [x] HA configuration check passes.
+- [x] HA restarted.
+- [x] Sol-Ark test entities are created.
+- [ ] Core sensors populate with live values.
 - [ ] Any Fault sensor behaves correctly.
 - [ ] 24-hour stability period started.
 - [ ] 24-hour stability period passed.
@@ -173,7 +195,9 @@ PER_INVERTER / SYSTEM_DUPLICATED / MASTER_ONLY / SLAVE_ONLY / UNKNOWN
 - [ ] Both channels stable.
 - [ ] Parallel aggregation validated.
 - [ ] Production HA package built.
-- [ ] InfluxDB export configured.
+- [x] InfluxDB installed and clean project bucket created.
+- [x] Grafana installed and connected to InfluxDB.
+- [ ] InfluxDB export receiving verified live Sol-Ark entities.
 - [ ] Grafana baseline dashboard deployed.
 - [ ] Backup process documented and tested.
-- [ ] GitHub issue #1 updated with commissioning results.
+- [x] GitHub issue #1 updated with current commissioning status.
