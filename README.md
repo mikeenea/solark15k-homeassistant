@@ -83,12 +83,20 @@ Do not add register writes unless the applicable Sol-Ark documentation explicitl
 
 ## Hardware
 
-Current recommended gateway:
+### Recommended gateway — Waveshare 2-CH RS485 TO POE ETH (B)
 
-- **Waveshare 2-CH RS485 TO POE ETH (B)**
-- PoE-powered Ethernet connection
-- two independent RS485 channels
-- Modbus TCP ↔ Modbus RTU gateway mode
+[![Waveshare 2-CH RS485 TO POE ETH (B)](https://www.waveshare.com/wiki/Special:Redirect/file/2-CH%20RS485%20TO%20ETH%20%28B%29.jpg)](https://www.waveshare.com/product/iot-communication/wired-comm-converter/2-ch-rs485-to-eth-b.htm)
+
+> **Use the PoE model:** select **2-CH RS485 TO POE ETH (B)**, not the non-PoE **2-CH RS485 TO ETH (B)** variant.
+
+Why this gateway fits the project:
+
+- two isolated RS485 channels that can operate independently;
+- PoE-powered Ethernet on the PoE variant, IEEE 802.3af compliant;
+- Modbus TCP ↔ Modbus RTU gateway support;
+- web-based configuration;
+- DIN-rail-capable industrial enclosure;
+- one RS485 channel can be dedicated to each Sol-Ark 15K.
 
 For a two-inverter installation:
 
@@ -96,6 +104,14 @@ For a two-inverter installation:
 Waveshare CH1 -> Sol-Ark #1 RS485
 Waveshare CH2 -> Sol-Ark #2 RS485
 ```
+
+Official Waveshare sources:
+
+- [Waveshare product page — 2-CH RS485 TO ETH (B) / 2-CH RS485 TO POE ETH (B)](https://www.waveshare.com/product/iot-communication/wired-comm-converter/2-ch-rs485-to-eth-b.htm)
+- [Waveshare Wiki — 2-CH RS485 TO POE ETH (B)](https://www.waveshare.com/wiki/2-CH_RS485_TO_POE_ETH_(B))
+- [Waveshare Wiki image source](https://www.waveshare.com/wiki/File:2-CH_RS485_TO_ETH_(B).jpg)
+
+The official Waveshare page covers both the standard Ethernet and PoE variants. This project specifically targets the **PoE** version.
 
 See [`docs/hardware.md`](docs/hardware.md), [`docs/wiring.md`](docs/wiring.md), and [`docs/waveshare-setup.md`](docs/waveshare-setup.md).
 
