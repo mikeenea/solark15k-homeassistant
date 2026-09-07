@@ -6,6 +6,56 @@ Grafana is the primary advanced historical visualization layer for the Sol-Ark d
 
 Home Assistant remains the operational interface; Grafana provides deeper time-series analysis, comparison, and troubleshooting.
 
+## Current deployment status
+
+As of September 2026, Grafana is running in Home Assistant and reads the production historian from **InfluxDB OSS 2.8.0 on the UGREEN NAS**.
+
+Current data-source model:
+
+```text
+Grafana
+  |
+  | Flux / HTTP :8086
+  v
+UGREEN NAS
+InfluxDB OSS 2.8.0
+bucket: solark
+```
+
+Use a dedicated read-only token for Grafana. Do not reuse the Home Assistant writer token.
+
+Conceptual data-source settings:
+
+```text
+URL:            http://<UGREEN-NAS-IP>:8086
+Query language: Flux
+Organization:   home
+Default bucket: solark
+Token:          grafana-solark-read
+```
+
+Do not store the actual token in GitHub.
+
+A simple connectivity test in Grafana Explore is:
+
+```flux
+buckets()
+```
+
+The result should include `solark`.
+
+A bucket-read test is:
+
+```flux
+from(bucket: "solark")
+  |> range(start: -24h)
+  |> limit(n: 10)
+```
+
+Before the Waveshare gateway is installed, zero series is expected because the Home Assistant Sol-Ark test entities remain `unknown`. Authorization, connection, or bucket-not-found errors are not expected.
+
+See [`nas-influxdb.md`](nas-influxdb.md) for the NAS historian deployment.
+
 ## Dashboard set
 
 The project plans several focused dashboards rather than one extremely dense page.
