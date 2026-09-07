@@ -17,6 +17,7 @@ This project is intended to replace a failed or unwanted SolarAssistant monitori
 - Dual-inverter design and aggregation guidance.
 - Home Assistant dashboard examples.
 - InfluxDB long-term retention design.
+- UGREEN NAS deployment guidance for the production historian.
 - Grafana dashboard design for multi-year historical analysis.
 - Fault-word monitoring and future fault decoding.
 - Troubleshooting and validation procedures.
@@ -39,8 +40,16 @@ Existing CAN/RS485 splitter
                                   Home Assistant
                                         |
                                         +--> Recorder / HA statistics
-                                        +--> InfluxDB
-                                        +--> Grafana
+                                        |
+                                        +--> InfluxDB API :8086
+                                                |
+                                                v
+                                           UGREEN NAS
+                                      InfluxDB OSS 2.8.0
+                                         bucket: solark
+                                                |
+                                                v
+                                             Grafana
 
 Sol-Ark 15K #2
 Battery/CAN port
@@ -54,6 +63,8 @@ Existing CAN/RS485 splitter
 ```
 
 The two inverter RS485 links remain electrically independent. Each Waveshare channel is treated as a separate Modbus TCP gateway.
+
+The production historian is hosted on the UGREEN NAS rather than on the Home Assistant system disk. Grafana may continue to run in Home Assistant while querying the NAS-hosted InfluxDB instance.
 
 ## Protocol baseline
 
@@ -150,8 +161,11 @@ See [`docs/first-test.md`](docs/first-test.md).
 │   ├── home-assistant.md
 │   ├── dual-inverter.md
 │   ├── influxdb.md
+│   ├── nas-influxdb.md
 │   ├── grafana.md
 │   └── troubleshooting.md
+├── docker/
+│   └── influxdb-compose.yml
 ├── homeassistant/
 │   ├── packages/
 │   │   └── solark15k_test_package.yaml
@@ -169,10 +183,16 @@ Home Assistant should not be asked to retain every high-frequency state change f
 
 - Home Assistant Recorder for normal HA operation and short-term history;
 - Home Assistant long-term statistics for native energy/statistical history;
-- InfluxDB for high-resolution time-series retention;
+- InfluxDB OSS 2.8.0 on the UGREEN NAS for high-resolution time-series retention;
 - Grafana for advanced historical visualization and analysis.
 
+The `solark` bucket is deliberately restricted to entities created by this integration and project-defined formulas derived from those entities. It is not a general Home Assistant historian.
+
 The planned retention model keeps high-resolution data for a shorter period while retaining downsampled one-minute, fifteen-minute, hourly, and daily data for years.
+
+The NAS container is pinned to `influxdb:2.8.0`. Do not treat changes to a generic Docker `latest` tag as an instruction to migrate this project. Any move to InfluxDB 3 should be deliberate and include data migration, Grafana query conversion, compatibility testing, and rollback planning.
+
+See [`docs/influxdb.md`](docs/influxdb.md), [`docs/nas-influxdb.md`](docs/nas-influxdb.md), and [`docs/grafana.md`](docs/grafana.md).
 
 ## Current field-validation priorities
 
