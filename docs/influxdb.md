@@ -8,44 +8,46 @@ This project intentionally does **not** use InfluxDB as a general Home Assistant
 
 The design goal is to preserve enough detail for Sol-Ark troubleshooting and performance analysis without storing unrelated Home Assistant data or every 10-second value forever.
 
-## Field-verified Home Assistant OS status — 2026-09-05
+## Field-verified deployment status — 2026-09-06
 
-The current installation has been staged successfully through the historian layer:
+The production historian has been moved off the Home Assistant host and onto the UGREEN NAS.
 
-- InfluxDB OSS 2.8 is installed from `https://github.com/naked-head/homeassistant-addons`.
-- Grafana is installed from the Home Assistant Community Apps repository.
-- Grafana successfully connects to InfluxDB.
-- The `solark` bucket was deleted/recreated after an initial broad Home Assistant export so the project could start with a clean dataset.
-- Home Assistant export is now intentionally restricted to Sol-Ark project entities/formulas only.
+Current staged state:
+
+- UGREEN Docker project `solark-influxdb` is running.
+- InfluxDB OSS 2.8.0 is pinned with `influxdb:2.8.0`.
+- The production bucket is `solark` in organization `home`.
+- Home Assistant has been reconfigured through the InfluxDB integration UI to write to the NAS-hosted instance.
+- The YAML configuration retains the Sol-Ark-only include filter; connection/authentication details are no longer intended to remain duplicated in YAML after the UI config entry is working.
+- Grafana remains available from Home Assistant and has been reconfigured to read the NAS-hosted InfluxDB instance.
+- Grafana data-source validation succeeds and sees the `solark` bucket.
 - `sensor.sol_ark_test_*` entities are present in Home Assistant.
 - Those entities currently report `unknown` because the Waveshare Modbus gateway has not yet been installed; therefore the clean `solark` bucket is expected to remain empty until live inverter telemetry exists.
 
 Do not add unrelated Home Assistant entities merely to test Grafana. Resume historian validation after the Waveshare is installed and live Sol-Ark values are available.
 
-## Current Home Assistant OS installation note
+See [`nas-influxdb.md`](nas-influxdb.md) for the field-verified NAS deployment and [`../docker/influxdb-compose.yml`](../docker/influxdb-compose.yml) for the pinned Docker definition.
 
-As of September 2026, do **not** use the older `danieloldberg/addon-influxdbv2` Home Assistant app for this project. On an amd64 Home Assistant OS host, version `v0.0.4` was observed failing during its local Docker build because the Debian Bullseye security repository returned `404 Not Found` for required packages such as `libc-dev-bin` and `linux-libc-dev`. This is an app build/dependency problem, not a Sol-Ark, Home Assistant entity, disk-space, or Modbus problem.
+## Deployment policy
 
-The currently recommended HAOS repository for this project is:
+The production historian should remain on persistent NAS storage rather than using the Home Assistant system disk as the long-term database location.
 
-```text
-https://github.com/naked-head/homeassistant-addons
-```
-
-That repository provides **InfluxDB OSS 2.8.0** as a Home Assistant Supervisor app.
-
-Grafana remains available from the Home Assistant Community Apps repository:
+Current production image:
 
 ```text
-https://github.com/hassio-addons/repository
+influxdb:2.8.0
 ```
 
-This recommendation should be revisited periodically because third-party Home Assistant app maintenance can change.
+Keep the image pinned during commissioning and initial data collection. Do not replace the pinned tag with a generic `latest` tag as part of routine maintenance.
+
+A future migration to InfluxDB 3 should be treated as a separate planned change because it can affect Grafana query language, historical-data handling, compatibility, migration procedures, and rollback requirements.
+
+The earlier Home Assistant-hosted InfluxDB app was useful for initial staging, but it is no longer the intended production historian.
 
 ## Data-flow role
 
 ```text
-Sol-Ark -> Waveshare -> Home Assistant -> InfluxDB -> Grafana
+Sol-Ark -> Waveshare -> Home Assistant -> UGREEN NAS InfluxDB -> Grafana
                                |
                                +-> Recorder / HA long-term statistics
 ```
@@ -258,11 +260,11 @@ Weekly backup: retain 8 weeks
 Monthly backup: retain 24 months or longer
 ```
 
-Store backups separately from the primary Home Assistant system disk when practical.
+Store backups separately from the primary UGREEN NAS storage pool when practical. RAID is not a substitute for backup.
 
 ## Rebuild philosophy
 
-The Home Assistant YAML and Grafana dashboards belong in GitHub and can be recreated. The time-series data itself cannot be recreated after loss unless another source retained it.
+The Home Assistant YAML, Docker definition, and Grafana dashboards belong in GitHub and can be recreated. The time-series data itself cannot be recreated after loss unless another source retained it.
 
 Prioritize backups of InfluxDB data, InfluxDB configuration/retention tasks, Grafana provisioning/dashboards, and Home Assistant configuration.
 
